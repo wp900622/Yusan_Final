@@ -1,6 +1,5 @@
 package com.example.bank.DTO;
 
-import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -11,9 +10,6 @@ import java.util.List;
 @Setter
 public class OrderRequest {
 
-    @NotBlank(message = "成員編號不能為空")
-    private String memberId;
-
-
+    // memberId 不再由前端傳入，後端從 JWT 解析登入者
     private List<OrderDto> Items;
 }

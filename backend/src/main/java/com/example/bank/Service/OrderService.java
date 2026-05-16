@@ -3,8 +3,10 @@ package com.example.bank.Service;
 import com.example.bank.DTO.OrderDto;
 import com.example.bank.DTO.OrderRequest;
 import com.example.bank.Entity.Order;
+import com.example.bank.Entity.UserEntity;
 import com.example.bank.Repository.OrderRepository;
 import com.example.bank.Repository.ProductRepository;
+import com.example.bank.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,23 +23,30 @@ public class OrderService {
     @Autowired
     private ProductRepository productRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
     /**
      * 建立完整訂單：包含主檔、明細扣庫存、計算總額
      */
     @Transactional(rollbackFor = Exception.class)
-    public String placeOrder(OrderRequest request) {
-        // 1. 生成訂單編號 (範例: Ms20250801...)
+    public String placeOrder(String username, OrderRequest request) {
+        // 1. 由 username 換到 user_id (orders.member_id 對 users.user_id 有 FK)
+        UserEntity user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("使用者不存在: " + username));
+
+        // 2. 生成訂單編號 (範例: Ms20250801...)
         String orderId = generateOrderNo();
 
-        // 2. 建立訂單主檔 (先給予總價 0，待明細新增完後更新)
+        // 3. 建立訂單主檔 (先給予總價 0，待明細新增完後更新)
         Order newOrder = new Order();
         newOrder.setOrderId(orderId);
-        newOrder.setMemberId(request.getMemberId());
+        newOrder.setMemberId(user.getUserId());
         newOrder.setTotalPrice(0);
         newOrder.setPayStatus(0); // 預設未付款
         orderRepository.save(newOrder);
 
-        // 3. 逐一處理購買品項 (呼叫 Stored Procedure)
+        // 4. 逐一處理購買品項 (呼叫 Stored Procedure)
         for (OrderDto item : request.getItems()) {
             // 這個 Procedure 內部會：檢查庫存 -> 鎖定行 -> 扣庫存 -> 寫入 order_details
             productRepository.spProcessOrderItem(
@@ -47,7 +56,7 @@ public class OrderService {
             );
         }
 
-        // 4. 計算並更新訂單總金額
+        // 5. 計算並更新訂單總金額
         // 透過我們在 Repository 定義的 Native Query 重新計算 Sum
         orderRepository.updateOrderTotal(orderId);
 

@@ -72,7 +72,8 @@ public class AuthController {
         newUser.setUsername(request.getUsername());
         newUser.setRealName(request.getRealName());
         newUser.setEmail(request.getEmail());
-        newUser.setRole(Role.USER); // 預設角色給 USER
+        // 帳號為 "admin" 自動授予管理者角色；其他人預設為一般使用者
+        newUser.setRole("admin".equals(request.getUsername()) ? Role.ADMIN : Role.USER);
 
         // 4. 【超級關鍵】將明文密碼加密後再存入！
         // 這樣存進去才會是像 $2a$10$... 這樣的安全雜湊碼

@@ -27,7 +27,6 @@ const totalAmount = computed(() => {
 // 送出訂單
 const submitOrder = async () => {
   const request = {
-    memberId: "USER_001",
     Items: selectedProducts.value.map(p => ({ productId: p.productId, quantity: p.buyQty }))
   };
   console.log(request);
