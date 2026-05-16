@@ -55,7 +55,7 @@ function handleLogout() {
   </Transition>
 
   <footer class="footbar muted">
-    <span>Three-tier · Vue 3 + Spring Boot + MySQL · Stored Procedures only</span>
+    <span> Yusan Shopping Website @Copyright 2026. All rights reserved.</span>
   </footer>
 </template>
 
