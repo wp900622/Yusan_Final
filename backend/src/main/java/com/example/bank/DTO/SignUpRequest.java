@@ -1,5 +1,7 @@
 package com.example.bank.DTO;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -8,8 +10,16 @@ import lombok.Setter;
 @Getter
 @Setter
 public class SignUpRequest {
-    private String username;   // 對應 username
-    private String password;   // 明文密碼
-    private String realName;   // 對應 real_name
-    private String email;      // 對應 email
+
+    @NotBlank(message = "帳號不能為空")
+    private String username;
+
+    @NotBlank(message = "密碼不能為空")
+    private String password;
+
+    private String realName;
+
+    @NotBlank(message = "Email 不能為空")
+    @Email(message = "Email 格式不正確")
+    private String email;
 }

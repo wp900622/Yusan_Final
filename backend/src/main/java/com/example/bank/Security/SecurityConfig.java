@@ -27,7 +27,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**").permitAll() // 註冊、登入免驗證
+                        .requestMatchers("/auth/**", "/error").permitAll() // 註冊、登入、錯誤頁免驗證
                         .anyRequest().authenticated()               // 其他 API（如訂單）全都需要 JWT 驗證
                 )
                 // 【超級檢查點 5】這行沒加的話，JwtAuthenticationFilter 就不會起作用！

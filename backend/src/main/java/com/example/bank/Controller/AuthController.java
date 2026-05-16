@@ -6,6 +6,8 @@ import com.example.bank.Entity.Role;
 import com.example.bank.Entity.UserEntity;
 import com.example.bank.Repository.UserRepository;
 import com.example.bank.util.JwtUtil;
+import com.example.bank.util.XssSanitizer;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -58,10 +60,14 @@ public class AuthController {
         return ResponseEntity.ok(authResponse);
     }
     @PostMapping("/signup")
-    public ResponseEntity<?> signup(@RequestBody SignUpRequest request) {
-        // 1. 檢查帳號 (Username) 是否已經被註冊過了
+    public ResponseEntity<?> signup(@Valid @RequestBody SignUpRequest request) {
+        // 1. 對可顯示欄位做 XSS 淨化；email 由 @Email 驗證格式即可，不過 sanitize 以免 @ 被轉成 &#64;
+        String username = XssSanitizer.clean(request.getUsername());
+        String realName = XssSanitizer.clean(request.getRealName());
+        String email    = request.getEmail();
 
-        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
+        // 2. 檢查帳號 (Username) 是否已經被註冊過了
+        if (userRepository.findByUsername(username).isPresent()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("此帳號已被佔用");
         }
 
@@ -69,11 +75,11 @@ public class AuthController {
         UserEntity newUser = new UserEntity();
         String randomId = UUID.randomUUID().toString();
         newUser.setUserId(randomId);
-        newUser.setUsername(request.getUsername());
-        newUser.setRealName(request.getRealName());
-        newUser.setEmail(request.getEmail());
+        newUser.setUsername(username);
+        newUser.setRealName(realName);
+        newUser.setEmail(email);
         // 帳號為 "admin" 自動授予管理者角色；其他人預設為一般使用者
-        newUser.setRole("admin".equals(request.getUsername()) ? Role.ADMIN : Role.USER);
+        newUser.setRole("admin".equals(username) ? Role.ADMIN : Role.USER);
 
         // 4. 【超級關鍵】將明文密碼加密後再存入！
         // 這樣存進去才會是像 $2a$10$... 這樣的安全雜湊碼

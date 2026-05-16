@@ -2,7 +2,6 @@ package com.example.bank.Service;
 
 import com.example.bank.DTO.OrderDto;
 import com.example.bank.DTO.OrderRequest;
-import com.example.bank.Entity.Order;
 import com.example.bank.Entity.UserEntity;
 import com.example.bank.Repository.OrderRepository;
 import com.example.bank.Repository.ProductRepository;
@@ -38,13 +37,8 @@ public class OrderService {
         // 2. 生成訂單編號 (範例: Ms20250801...)
         String orderId = generateOrderNo();
 
-        // 3. 建立訂單主檔 (先給予總價 0，待明細新增完後更新)
-        Order newOrder = new Order();
-        newOrder.setOrderId(orderId);
-        newOrder.setMemberId(user.getUserId());
-        newOrder.setTotalPrice(0);
-        newOrder.setPayStatus(0); // 預設未付款
-        orderRepository.save(newOrder);
+        // 3. 建立訂單主檔 (透過 Stored Procedure 寫入；總價先給 0，待明細加完後再更新)
+        orderRepository.spInsertOrderMain(orderId, user.getUserId(), 0, 0);
 
         // 4. 逐一處理購買品項 (呼叫 Stored Procedure)
         for (OrderDto item : request.getItems()) {
