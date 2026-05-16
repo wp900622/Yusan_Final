@@ -1,17 +1,11 @@
-const STORAGE_USERS = 'shopping_web_users'
+import axios from 'axios'
+
 const STORAGE_SESSION = 'shopping_web_session'
+const STORAGE_TOKEN = 'shopping_web_token'
 
-function getUsers() {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_USERS) || '[]')
-  } catch {
-    return []
-  }
-}
+const http = axios.create()
 
-function saveUsers(users) {
-  localStorage.setItem(STORAGE_USERS, JSON.stringify(users))
-}
+// ----- localStorage helpers -----
 
 function setSession(user) {
   localStorage.setItem(STORAGE_SESSION, JSON.stringify(user))
@@ -19,32 +13,7 @@ function setSession(user) {
 
 function clearSession() {
   localStorage.removeItem(STORAGE_SESSION)
-}
-
-export function register({ username, password }) {
-  const users = getUsers()
-  if (users.some(u => u.username === username)) {
-    return Promise.reject(new Error('此帳號已存在'))
-  }
-  const newUser = { username, password }
-  users.push(newUser)
-  saveUsers(users)
-  setSession({ username })
-  return Promise.resolve({ username })
-}
-
-export function login({ username, password }) {
-  const users = getUsers()
-  const user = users.find(u => u.username === username && u.password === password)
-  if (!user) {
-    return Promise.reject(new Error('帳號或密碼不正確'))
-  }
-  setSession({ username })
-  return Promise.resolve({ username })
-}
-
-export function logout() {
-  clearSession()
+  localStorage.removeItem(STORAGE_TOKEN)
 }
 
 export function getCurrentUser() {
@@ -55,6 +24,52 @@ export function getCurrentUser() {
   }
 }
 
+export function getToken() {
+  return localStorage.getItem(STORAGE_TOKEN)
+}
+
 export function isLoggedIn() {
   return Boolean(getCurrentUser())
+}
+
+// ----- error handling -----
+
+function extractErrorMessage(error, fallback) {
+  const payload = error.response?.data
+  return (
+    (payload && (payload.message || payload.error)) ||
+    (typeof payload === 'string' ? payload : null) ||
+    error.message ||
+    fallback
+  )
+}
+
+// ----- auth API -----
+
+export async function register({ email, name, username, password }) {
+  try {
+    const { data } = await http.post('/auth/signup', { email, name, username, password })
+    return data
+  } catch (e) {
+    throw new Error(extractErrorMessage(e, '註冊失敗'))
+  }
+}
+
+export async function login({ username, password }) {
+  try {
+    const { data } = await http.post('/auth/login', { username, password })
+    const resolvedUsername = data?.username || username
+    const role = (data?.role || 'user').toLowerCase()
+    if (data?.token) {
+      localStorage.setItem(STORAGE_TOKEN, data.token)
+    }
+    setSession({ username: resolvedUsername, role })
+    return { username: resolvedUsername, token: data?.token, role }
+  } catch (e) {
+    throw new Error(extractErrorMessage(e, '登入失敗'))
+  }
+}
+
+export function logout() {
+  clearSession()
 }

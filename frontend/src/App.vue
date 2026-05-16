@@ -1,5 +1,8 @@
 <script setup>
-import { provide, ref } from 'vue'
+import { provide, ref, computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { isLoggedIn, logout } from './api/auth'
+import { useAuthStore } from './stores/auth'
 
 const toast = ref(null)
 
@@ -8,6 +11,20 @@ function showToast(message, type = 'info', ms = 3000) {
   setTimeout(() => { toast.value = null }, ms)
 }
 provide('toast', showToast)
+
+const authStore = useAuthStore()
+const route = useRoute()
+const router = useRouter()
+const authenticated = computed(() => {
+  route.fullPath
+  return isLoggedIn()
+})
+
+function handleLogout() {
+  logout()
+  authStore.logout()
+  router.push('/login')
+}
 </script>
 
 <template>
@@ -16,10 +33,16 @@ provide('toast', showToast)
       <span class="title">YuShan Shopping Website<span class="accent">.</span></span>
       <span class="sub muted">Only Belong To You</span>
     </div>
-    <nav>
-      <router-link to="/admin">Admin</router-link>
+    <nav v-if="authenticated">
+      <router-link v-if="authStore.userRole === 'admin'" to="/admin">Admin</router-link>
       <router-link to="/shop">Shop</router-link>
       <router-link to="/orders">Order</router-link>
+      <span class="user-tag muted">Hi, {{ authStore.username }}</span>
+      <button class="link-button" type="button" @click="handleLogout">Logout</button>
+    </nav>
+    <nav v-else>
+      <router-link to="/login">Login</router-link>
+      <router-link to="/register">Signup</router-link>
     </nav>
   </header>
 
@@ -68,6 +91,11 @@ provide('toast', showToast)
 .sub {
   font-style: italic;
   font-family: var(--font-serif);
+  font-size: 0.85rem;
+}
+.user-tag {
+  padding-left: 0.8rem;
+  border-left: 1px solid var(--line);
   font-size: 0.85rem;
 }
 

@@ -2,11 +2,12 @@
 import { ref, onMounted, inject, computed } from 'vue'
 import { productApi } from '../api/product'
 import { isLoggedIn, getCurrentUser } from '../api/auth'
+import { useAuthStore } from '../stores/auth'
 
 const products = ref([])
 const loading = ref(false)
 const toast = inject('toast')
-
+const authStore = useAuthStore()
 const authenticated = computed(() => isLoggedIn())
 const user = computed(() => getCurrentUser())
 
@@ -39,6 +40,7 @@ onMounted(loadProducts)
 </script>
 
 <template>
+
   <section class="hero home-hero">
     <p class="muted small" v-if="authenticated">目前登入：{{ user?.username }}</p>
   </section>
@@ -60,7 +62,7 @@ onMounted(loadProducts)
       </thead>
       <tbody>
         <tr v-for="product in products" :key="product.productId">
-        
+
           <td class="num muted">{{ product.productId }}</td>
           <td>{{ product.productName }}</td>
           <td class="right num">{{ fmt(product.price) }}</td>
@@ -80,29 +82,6 @@ onMounted(loadProducts)
   max-width: 740px;
   margin: 0 auto 2rem;
   text-align: center;
-}
-.home-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 1rem;
-  margin: 2rem 0;
-}
-.cta,
-.ghost {
-  padding: 0.95rem 1.5rem;
-  border-radius: 999px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-.cta {
-  background: var(--accent);
-  color: white;
-}
-.ghost {
-  border: 1px solid currentColor;
-  background: transparent;
-  color: var(--ink);
 }
 .product-list {
   max-width: 980px;

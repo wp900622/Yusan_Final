@@ -1,9 +1,18 @@
 import axios from 'axios'
 
+const TOKEN_KEY = 'shopping_web_token'
+
 const http = axios.create({
-  baseURL: '/api',
   timeout: 10000,
   headers: { 'Content-Type': 'application/json' }
+})
+
+http.interceptors.request.use(config => {
+  const token = localStorage.getItem(TOKEN_KEY)
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
 })
 
 // Normalise responses so callers always get the unwrapped payload

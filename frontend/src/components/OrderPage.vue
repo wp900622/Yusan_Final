@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import axios from 'axios';
+import { productApi } from '../api/product';
+import { orderApi } from '../api/order';
 
 const products = ref([]);
 const selectedProducts = ref([]);
@@ -8,8 +9,8 @@ const selectedProducts = ref([]);
 
 // 取得庫存 > 0 的商品
 const loadProducts = async () => {
-  const res = await axios.get('http://localhost:8081/api/product/available');
-  products.value = res.data.map(p => ({ ...p, buyQty: 1 }));
+  const data = await productApi.listAvailable();
+  products.value = data.map(p => ({ ...p, buyQty: 1 }));
 };
 
 // 數量校驗：不能大於庫存
@@ -31,12 +32,12 @@ const submitOrder = async () => {
   };
   console.log(request);
   try {
-    const res = await axios.post('http://localhost:8081/order', request);
-    alert('訂單建立成功！編號：' + res.data);
+    const orderId = await orderApi.create(request);
+    alert('訂單建立成功！編號：' + orderId);
     loadProducts(); // 重新載入最新庫存
     selectedProducts.value = [];
   } catch (err) {
-    alert('失敗：' + err.response.data);
+    alert('失敗：' + err.message);
   }
 };
 

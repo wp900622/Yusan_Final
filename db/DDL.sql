@@ -41,3 +41,7 @@ FOREIGN KEY (member_id) REFERENCES users(user_id);
 
 INSERT INTO users (user_id, username, password) -- 欄位名稱請根據你的 user 表調整
 VALUES ('USER_001', '測試帳號','123');
+
+UPDATE User 
+SET Role = 'Admin' 
+WHERE Username = 'admin';

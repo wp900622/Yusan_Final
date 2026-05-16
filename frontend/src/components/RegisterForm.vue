@@ -4,12 +4,12 @@ import { useRouter } from 'vue-router'
 import { register } from '../api/auth'
 
 const router = useRouter()
-const form = reactive({ username: '', password: '', confirmPassword: '' })
+const form = reactive({ email: '', name: '', username: '', password: '', confirmPassword: '' })
 const error = ref('')
 const submitting = ref(false)
 
 async function submit() {
-  if (!form.username || !form.password || !form.confirmPassword) {
+  if (!form.email || !form.name || !form.username || !form.password || !form.confirmPassword) {
     error.value = '請填寫所有欄位'
     return
   }
@@ -21,8 +21,14 @@ async function submit() {
   submitting.value = true
   error.value = ''
   try {
-    await register({ username: form.username.trim(), password: form.password })
-    router.push('/shop')
+    await register({
+      email: form.email.trim(),
+      name: form.name.trim(),
+      username: form.username.trim(),
+      password: form.password,
+    })
+    alert('註冊成功，請使用帳號密碼登入')
+    router.push('/login')
   } catch (e) {
     error.value = e.message || '註冊失敗'
   } finally {
@@ -40,6 +46,14 @@ async function submit() {
 
   <div class="card auth-card">
     <form @submit.prevent="submit">
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" v-model="form.email" type="text" placeholder="輸入email" autocomplete="example@gmail.com" />
+      </div>
+       <div class="field">
+        <label for="name">姓名</label>
+        <input id="name" v-model="form.name" type="text" placeholder="輸入姓名" autocomplete="example@gmail.com" />
+      </div>
       <div class="field">
         <label for="username">帳號</label>
         <input id="username" v-model="form.username" type="text" placeholder="輸入帳號" autocomplete="username" />

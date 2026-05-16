@@ -2,13 +2,15 @@
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { login } from '../api/auth'
+import { useAuthStore } from '../stores/auth'
 
 const router = useRouter()
+const authStore = useAuthStore()
 const form = reactive({ username: '', password: '' })
 const error = ref('')
 const submitting = ref(false)
 
-async function submit() {
+const submit = async () => {
   if (!form.username || !form.password) {
     error.value = '請輸入帳號與密碼'
     return
@@ -16,8 +18,13 @@ async function submit() {
 
   submitting.value = true
   error.value = ''
+
   try {
-    await login({ username: form.username.trim(), password: form.password })
+    const response = await login({
+      username: form.username.trim(),
+      password: form.password,
+    })
+    authStore.login({ username: response.username, role: response.role })
     router.push('/shop')
   } catch (e) {
     error.value = e.message || '登入失敗'
