@@ -1,0 +1,34 @@
+# Node
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+*.log
+
+# Java / Gradle
+.gradle/
+**/.gradle/
+build/
+**/build/
+*.class
+*.jar
+!**/gradle-wrapper.jar
+
+# IDE
+.idea/
+**/.idea/
+*.iml
+.vscode/
+**/.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.local
+
+# Claude Code
+.claude/
+**/.claude/
