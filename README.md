@@ -6,8 +6,8 @@
 
 ```
 Yusan_Final/
-├── backend/    # Node.js 後端
-├── frontend/   # HTML 前端
+├── backend/    # SpringBoot 後端
+├── frontend/   # Vue.js 前端
 └── db/         # SQL schema
 ```
 
