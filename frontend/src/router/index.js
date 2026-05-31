@@ -15,7 +15,9 @@ const routes = [
   { path: '/register', component: RegisterForm },
   { path: '/orders/:id', component: () => import('../components/OrderDetailView.vue'), props: true },
   { path: '/product/success', component: ProductCreated, meta: { requiresAdmin: true } },
-  { path: '/orders', component: OrderPage }
+  { path: '/orders', component: OrderPage },
+  { path: '/cart', component: () => import('../components/CartView.vue') },
+  { path: '/checkout', component: () => import('../components/CheckoutView.vue'), meta: { requiresAuth: true } }
 ]
 
 const router = createRouter({
@@ -24,12 +26,12 @@ const router = createRouter({
 })
 
 router.beforeEach((to) => {
-  if (!to.meta.requiresAdmin) return true
+  if (!to.meta.requiresAdmin && !to.meta.requiresAuth) return true
   const auth = useAuthStore()
   if (!auth.isLoggedIn) {
     return { path: '/login', query: { redirect: to.fullPath } }
   }
-  if (auth.userRole !== 'admin') {
+  if (to.meta.requiresAdmin && auth.userRole !== 'admin') {
     return { path: '/shop' }
   }
   return true

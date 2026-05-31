@@ -3,8 +3,10 @@ import { provide, ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { isLoggedIn, logout } from './api/auth'
 import { useAuthStore } from './stores/auth'
+import { useCartStore } from './stores/cart'
 
 const toast = ref(null)
+const cart = useCartStore()
 
 function showToast(message, type = 'info', ms = 3000) {
   toast.value = { message, type }
@@ -37,12 +39,18 @@ function handleLogout() {
       <router-link v-if="authStore.userRole === 'admin'" to="/admin">Admin</router-link>
       <router-link to="/shop">Shop</router-link>
       <router-link to="/orders">Order</router-link>
+      <router-link to="/cart" class="cart-link">
+        Cart<span v-if="cart.count" class="cart-badge">{{ cart.count }}</span>
+      </router-link>
       <span class="user-tag muted">Hi, {{ authStore.username }}</span>
       <button class="link-button" type="button" @click="handleLogout">Logout</button>
     </nav>
     <nav v-else>
       <router-link to="/login">Login</router-link>
       <router-link to="/register">Signup</router-link>
+      <router-link to="/cart" class="cart-link">
+        Cart<span v-if="cart.count" class="cart-badge">{{ cart.count }}</span>
+      </router-link>
     </nav>
   </header>
 
@@ -97,6 +105,20 @@ function handleLogout() {
   padding-left: 0.8rem;
   border-left: 1px solid var(--line);
   font-size: 0.85rem;
+}
+.cart-link { position: relative; }
+.cart-badge {
+  display: inline-block;
+  margin-left: 0.35rem;
+  min-width: 1.1rem;
+  padding: 0 0.3rem;
+  font-size: 0.7rem;
+  line-height: 1.1rem;
+  text-align: center;
+  color: #fff;
+  background: var(--accent);
+  border-radius: 999px;
+  letter-spacing: 0;
 }
 
 nav {

@@ -35,8 +35,20 @@ CREATE TABLE users (
 );
 
 -- 修改 orders 表以關聯 users
-ALTER TABLE orders 
-ADD CONSTRAINT fk_order_user 
+ALTER TABLE orders
+ADD CONSTRAINT fk_order_user
 FOREIGN KEY (member_id) REFERENCES users(user_id);
+
+
+-- 購物車明細：每位會員一筆資料列對應一項商品 (伺服器端持久化購物車)
+CREATE TABLE cart_items (
+    cart_item_sn INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    member_id VARCHAR(50) NOT NULL,
+    product_id VARCHAR(50) NOT NULL,
+    quantity INT NOT NULL,
+    UNIQUE (member_id, product_id),                          -- 同會員同商品僅一筆,加入時累加數量
+    FOREIGN KEY (member_id) REFERENCES users(user_id),
+    FOREIGN KEY (product_id) REFERENCES products(product_id)
+);
 
 

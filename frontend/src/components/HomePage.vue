@@ -1,15 +1,24 @@
 <script setup>
-import { ref, onMounted, inject, computed } from 'vue'
+import { ref, reactive, onMounted, inject, computed } from 'vue'
 import { productApi } from '../api/product'
 import { isLoggedIn, getCurrentUser } from '../api/auth'
 import { useAuthStore } from '../stores/auth'
+import { useCartStore } from '../stores/cart'
 
 const products = ref([])
 const loading = ref(false)
 const toast = inject('toast')
 const authStore = useAuthStore()
+const cart = useCartStore()
+const qty = reactive({})
 const authenticated = computed(() => isLoggedIn())
 const user = computed(() => getCurrentUser())
+
+function addToCart (product) {
+  if (product.stock === 0) return
+  cart.addItem(product, qty[product.productId] || 1)
+  toast(`已將「${product.productName}」加入購物車`, 'success')
+}
 
 async function loadProducts() {
   loading.value = true
@@ -22,6 +31,9 @@ async function loadProducts() {
           stock: Number(p.stock)
         }))
       : []
+    for (const p of products.value) {
+      if (!qty[p.productId]) qty[p.productId] = 1
+    }
   } catch (e) {
     toast?.(e.message || '載入商品失敗', 'error')
   } finally {
@@ -58,6 +70,8 @@ onMounted(loadProducts)
           <th>名稱</th>
           <th class="right">售價</th>
           <th class="right">庫存</th>
+          <th class="right" style="width:90px">數量</th>
+          <th class="right" style="width:130px"></th>
         </tr>
       </thead>
       <tbody>
@@ -67,6 +81,21 @@ onMounted(loadProducts)
           <td>{{ product.productName }}</td>
           <td class="right num">{{ fmt(product.price) }}</td>
           <td class="right num" :class="{ accent: product.stock === 0 }">{{ product.stock }}</td>
+          <td class="right">
+            <input type="number"
+                   min="1"
+                   :max="product.stock || undefined"
+                   :disabled="product.stock === 0"
+                   v-model.number="qty[product.productId]"
+                   style="text-align:right; width:70px" />
+          </td>
+          <td class="right">
+            <button class="add-btn"
+                    :disabled="product.stock === 0"
+                    @click="addToCart(product)">
+              {{ product.stock === 0 ? '已售完' : '加入購物車' }}
+            </button>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -114,5 +143,10 @@ tbody tr {
   padding: 2rem;
   text-align: center;
   color: var(--ink-soft);
+}
+.add-btn {
+  font-size: 0.8rem;
+  padding: 0.45rem 0.85rem;
+  white-space: nowrap;
 }
 </style>

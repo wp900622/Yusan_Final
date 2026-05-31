@@ -1,54 +1,47 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { storeToRefs } from 'pinia'
 import { orderApi } from '../api/order'
+import { useCartStore } from '../stores/cart'
 
 const router = useRouter()
-const checkout = ref(null)
+const cart = useCartStore()
+const { items, customerName, totalAmount, isEmpty } = storeToRefs(cart)
 const loading = ref(false)
 const error = ref('')
 
-const totalAmount = computed(() => checkout.value?.items?.reduce((sum, item) => sum + item.subtotal, 0) || 0)
+const checkout = computed(() => ({
+  customerName: customerName.value,
+  items: items.value.map(i => ({ ...i, subtotal: i.price * i.quantity })),
+}))
 
 function loadCheckout() {
-  try {
-    const raw = localStorage.getItem('shopping_web_checkout')
-    checkout.value = raw ? JSON.parse(raw) : null
-  } catch {
-    checkout.value = null
-  }
-  if (!checkout.value || !checkout.value.items?.length) {
-    router.push('/shop')
+  if (isEmpty.value) {
+    router.push('/cart')
   }
 }
 
 async function placeOrder() {
-  const items = Array.isArray(checkout.value?.items) ? checkout.value.items : []
-  if (!items.length) {
-    error.value = '訂單內容不完整，請重新挑選商品'
+  if (isEmpty.value) {
+    error.value = '購物車是空的，請重新挑選商品'
     return
   }
 
   const payload = {
-    customerName: checkout.value.customerName || null,
-    items: items.map(item => ({
+    customerName: customerName.value || null,
+    items: items.value.map(item => ({
       productId: item.productId,
       quantity: Number(item.quantity) || 0
     }))
   }
 
-  if (!payload.items.length) {
-    error.value = '訂單內容不完整，請重新挑選商品'
-    return
-  }
-
   loading.value = true
   error.value = ''
   try {
-    console.log('checkout payload', payload)
     const created = await orderApi.create(payload)
-    localStorage.removeItem('shopping_web_checkout')
-    router.push(`/orders/${created.orderId}`)
+    cart.clear()
+    router.push(created?.orderId ? `/orders/${created.orderId}` : '/orders')
   } catch (e) {
     error.value = e.message || '結帳失敗'
   } finally {
@@ -112,7 +105,7 @@ onMounted(loadCheckout)
     <p v-if="error" class="error">{{ error }}</p>
 
     <div class="actions">
-      <button class="ghost" @click="router.push('/shop')">返回購物</button>
+      <button class="ghost" @click="router.push('/cart')">返回購物車</button>
       <button @click="placeOrder" :disabled="loading">{{ loading ? '處理中…' : '完成結帳' }}</button>
     </div>
   </div>
